@@ -130,9 +130,12 @@ varwin-git pull
 | Команда | Описание | Пример |
 |---|---|---|
 | `varwin-git list` | Показать список всех локальных проектов с ID и датами обновления | `varwin-git list` |
-| `varwin-git export <ID/Name>` | Экспорт проекта из Varwin в Git-структуру файлов | `varwin-git export 6 --dir ./my-repo` |
+| `varwin-git export <ID/Name>` | Экспорт проекта из Varwin в Git-структуру файлов | `varwin-git export 1 --dir ./my-repo` |
 | `varwin-git apply` | Загрузить / обновить проект в локальный Varwin из папки Git | `varwin-git apply --dir ./my-repo` |
-| `varwin-git push -m "..."` | Выгрузить из Varwin, закоммитить и запушить на GitHub | `varwin-git push 6 -m "Update logic"` |
+| `varwin-git status [path]` | Сравнить Git-репозиторий с состоянием в базе Varwin (код, блоки, объекты) | `varwin-git status` |
+| `varwin-git diff [path]` | Построчный цветной diff изменений кода Python и логики Blockly | `varwin-git diff` |
+| `varwin-git clone <URL>` | Клонировать удаленный Git-репозиторий и сразу применить его в Varwin | `varwin-git clone https://github.com/org/repo.git` |
+| `varwin-git push -m "..."` | Выгрузить из Varwin, закоммитить и запушить на GitHub | `varwin-git push -m "Update logic"` |
 | `varwin-git pull` | Подтянуть изменения с GitHub и накатить в локальный Varwin | `varwin-git pull` |
 
 ---
@@ -140,6 +143,7 @@ varwin-git pull
 ## 🤖 Интеграция с AI через MCP Server
 
 Если вы используете **Claude Desktop**, **Cursor**, **Antigravity** или **Cline**, MCP-сервер предоставляет встроенные инструменты:
+- `varwin_git_status` — AI-ассистент проверяет различия между рабочим деревом Git и живым проектом Varwin.
 - `varwin_git_export` — AI-ассистент может сам подготовить и выгрузить проект в репозиторий по голосовой или текстовой просьбе.
 - `varwin_git_apply` — AI-ассистент может накатить проект из любого репозитория прямо в ваш рантайм Varwin.
 

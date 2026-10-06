@@ -1,0 +1,45 @@
+# Maintainer: B10Sreg <iam171181@gmail.com>
+pkgname=varwin-git
+pkgver=1.0.0.r14.g373e3a4
+pkgrel=1
+pkgdesc="Varwin 18 Git Sync & Version Control Tool with AI Model Context Protocol (MCP) server"
+arch=('x86_64')
+url="https://github.com/B10Sreg/VarWin-mcp"
+license=('MIT')
+depends=('python' 'git')
+makedepends=('go' 'git')
+provides=('varwin-git' 'varwin-mcp')
+conflicts=('varwin-git' 'varwin-mcp')
+source=("git+https://github.com/B10Sreg/VarWin-mcp.git")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$srcdir/VarWin-mcp"
+  git describe --long --tags --always 2>/dev/null | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g' || echo "1.0.0.r$(git rev-list --count HEAD).g$(git rev-parse --short HEAD)"
+}
+
+build() {
+  cd "$srcdir/VarWin-mcp/mcp-go"
+  export CGO_ENABLED=0
+  go build -trimpath -ldflags="-s -w -buildid=" -o varwin-mcp .
+}
+
+package() {
+  cd "$srcdir/VarWin-mcp"
+
+  # CLI & MCP Binaries
+  install -Dm755 mcp-go/varwin-mcp "$pkgdir/usr/bin/varwin-mcp"
+  install -Dm755 scripts/varwin_git.py "$pkgdir/usr/bin/varwin-git"
+
+  # Shared Python libraries & scripts
+  install -d "$pkgdir/usr/share/varwin-mcp"
+  cp -r mcp "$pkgdir/usr/share/varwin-mcp/"
+  cp -r scripts "$pkgdir/usr/share/varwin-mcp/"
+
+  # Documentation & License
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+  if [ -d docs ]; then
+    cp -r docs "$pkgdir/usr/share/doc/$pkgname/"
+  fi
+}

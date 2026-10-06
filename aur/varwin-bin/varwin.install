@@ -1,0 +1,23 @@
+post_install() {
+    echo "==> Updating desktop MIME and icon caches..."
+    update-desktop-database -q 2>/dev/null || true
+    xdg-icon-resource forceupdate --theme hicolor 2>/dev/null || true
+    xdg-mime default VarwinClient18.desktop x-scheme-handler/varwin-client-18 2>/dev/null || true
+    ldconfig 2>/dev/null || true
+    echo ""
+    echo "=========================================================================="
+    echo " Varwin 18 successfully installed!"
+    echo " Run 'varwin' in terminal or launch Varwin 18 from your application menu."
+    echo "=========================================================================="
+    echo ""
+}
+
+post_upgrade() {
+    post_install
+}
+
+post_remove() {
+    update-desktop-database -q 2>/dev/null || true
+    xdg-icon-resource forceupdate --theme hicolor 2>/dev/null || true
+    ldconfig 2>/dev/null || true
+}

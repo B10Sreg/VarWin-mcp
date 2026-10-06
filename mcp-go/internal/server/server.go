@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"sort"
 	"strconv"
@@ -640,6 +641,65 @@ func (s *Server) registerTools() {
 		},
 		Handler: s.toolLaunchClient,
 	}
+
+	// 9. Git & Version Control
+	s.tools["varwin_git_export"] = ToolDefinition{
+		Name:        "varwin_git_export",
+		Description: "Экспортировать проект Varwin в легкую (~60 КБ), версионируемую структуру Git/GitHub (project.json, scene.json, objects.json, code/*.py, logic/Blockly.xml).",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"project": map[string]interface{}{
+					"type":        "string",
+					"description": "ID, GUID или название проекта для экспорта",
+				},
+				"dir": map[string]interface{}{
+					"type":        "string",
+					"description": "Опциональный путь к целевой папке Git-репозитория",
+				},
+			},
+			"required": []string{"project"},
+		},
+		Handler: s.toolGitExport,
+	}
+
+	s.tools["varwin_git_apply"] = ToolDefinition{
+		Name:        "varwin_git_apply",
+		Description: "Импортировать или обновить проект в локальном Varwin 18 из репозитория Git/GitHub.",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"dir": map[string]interface{}{
+					"type":        "string",
+					"description": "Путь к папке Git-репозитория (по умолчанию '.')",
+				},
+				"name": map[string]interface{}{
+					"type":        "string",
+					"description": "Опциональное переопределение имени проекта",
+				},
+			},
+		},
+		Handler: s.toolGitApply,
+	}
+
+	s.tools["varwin_git_status"] = ToolDefinition{
+		Name:        "varwin_git_status",
+		Description: "Сравнить локальный Git-репозиторий проекта с базой данных Varwin 18 (показывает измененные файлы кода, Blockly, 3D-объекты).",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"dir": map[string]interface{}{
+					"type":        "string",
+					"description": "Путь к папке Git-репозитория (по умолчанию '.')",
+				},
+				"project": map[string]interface{}{
+					"type":        "string",
+					"description": "ID, GUID или имя проекта (необязательно)",
+				},
+			},
+		},
+		Handler: s.toolGitStatus,
+	}
 }
 
 // Handlers
@@ -1252,6 +1312,97 @@ func (s *Server) toolLaunchClient(args map[string]interface{}) (string, error) {
 		return fmt.Sprintf("Ошибка запуска клиента: %v", err), nil
 	}
 	return fmt.Sprintf("🚀 Клиент Varwin запущен через URL `%s`.", url), nil
+}
+
+func findVarwinGitCLI() (string, []string) {
+	if path, err := exec.LookPath("varwin-git"); err == nil {
+		return path, nil
+	}
+	exe, err := os.Executable()
+	if err == nil {
+		dir := filepath.Dir(exe)
+		cand := filepath.Join(dir, "varwin-git")
+		if _, err := os.Stat(cand); err == nil {
+			return cand, nil
+		}
+		cand = filepath.Join(dir, "..", "bin", "varwin-git")
+		if _, err := os.Stat(cand); err == nil {
+			return cand, nil
+		}
+		cand = filepath.Join(dir, "..", "scripts", "varwin_git.py")
+		if _, err := os.Stat(cand); err == nil {
+			return "python3", []string{cand}
+		}
+	}
+	if _, err := os.Stat("/usr/bin/varwin-git"); err == nil {
+		return "/usr/bin/varwin-git", nil
+	}
+	return "python3", []string{"scripts/varwin_git.py"}
+}
+
+func (s *Server) toolGitExport(args map[string]interface{}) (string, error) {
+	proj, _ := args["project"].(string)
+	if proj == "" {
+		return "❌ Ошибка: не указан проект (ID, GUID или имя)", nil
+	}
+	targetDir, _ := args["dir"].(string)
+
+	bin, baseArgs := findVarwinGitCLI()
+	cmdArgs := append(baseArgs, "export", proj)
+	if targetDir != "" {
+		cmdArgs = append(cmdArgs, "--dir", targetDir)
+	}
+
+	cmd := exec.Command(bin, cmdArgs...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Sprintf("❌ Ошибка экспорта в Git: %v\n%s", err, string(out)), nil
+	}
+	return string(out), nil
+}
+
+func (s *Server) toolGitApply(args map[string]interface{}) (string, error) {
+	repoDir, _ := args["dir"].(string)
+	if repoDir == "" {
+		repoDir = "."
+	}
+	nameOverride, _ := args["name"].(string)
+
+	bin, baseArgs := findVarwinGitCLI()
+	cmdArgs := append(baseArgs, "apply", "--dir", repoDir)
+	if nameOverride != "" {
+		cmdArgs = append(cmdArgs, "--name", nameOverride)
+	}
+
+	cmd := exec.Command(bin, cmdArgs...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Sprintf("❌ Ошибка применения Git проекта: %v\n%s", err, string(out)), nil
+	}
+	return string(out), nil
+}
+
+func (s *Server) toolGitStatus(args map[string]interface{}) (string, error) {
+	repoDir, _ := args["dir"].(string)
+	if repoDir == "" {
+		repoDir = "."
+	}
+	proj, _ := args["project"].(string)
+
+	bin, baseArgs := findVarwinGitCLI()
+	cmdArgs := append(baseArgs, "status")
+	if proj != "" {
+		cmdArgs = append(cmdArgs, proj)
+	} else {
+		cmdArgs = append(cmdArgs, repoDir)
+	}
+
+	cmd := exec.Command(bin, cmdArgs...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Sprintf("❌ Ошибка получения статуса Git: %v\n%s", err, string(out)), nil
+	}
+	return string(out), nil
 }
 
 func (s *Server) HandleRequest(req JSONRPCRequest) *JSONRPCResponse {

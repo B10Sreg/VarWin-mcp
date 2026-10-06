@@ -276,6 +276,23 @@ class VarwinMCPServer:
                 },
                 "handler": self._tool_git_apply,
             },
+            "varwin_git_status": {
+                "description": "Сравнить локальный Git-репозиторий проекта с базой данных Varwin 18 (показывает измененные файлы кода, Blockly, 3D-объекты).",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "dir": {
+                            "type": "string",
+                            "description": "Путь к папке Git-репозитория (по умолчанию '.')",
+                        },
+                        "project": {
+                            "type": "string",
+                            "description": "ID, GUID или имя проекта (необязательно)",
+                        }
+                    }
+                },
+                "handler": self._tool_git_status,
+            },
         }
 
     # Tool Handlers
@@ -518,6 +535,20 @@ class VarwinMCPServer:
             return f"🎉 Проект из Git-репозитория `{repo_dir}` успешно применен в Varwin (Project ID: {p_id})!"
         except Exception as e:
             return f"❌ Ошибка применения Git проекта: {e}"
+
+    def _tool_git_status(self, args: Dict[str, Any]) -> str:
+        target = args.get("dir") or args.get("project") or "."
+        try:
+            import io
+            import contextlib
+            from scripts.varwin_git import VarwinGitManager
+            mgr = VarwinGitManager()
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                mgr.status_project(target)
+            return buf.getvalue()
+        except Exception as e:
+            return f"❌ Ошибка получения статуса Git: {e}"
 
     # JSON-RPC Dispatcher
     def handle_request(self, req: Dict[str, Any]) -> Optional[Dict[str, Any]]:

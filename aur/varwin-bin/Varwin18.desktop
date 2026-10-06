@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Varwin 18
+Comment=Varwin XRMS - 3D/VR Platform and Creation Suite
+Exec=/usr/bin/varwin %U
+Terminal=false
+Type=Application
+MimeType=x-scheme-handler/varwin;
+Icon=Varwin18
+Categories=Development;3DGraphics;
+StartupWMClass=Varwin XRMS

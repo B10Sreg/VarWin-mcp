@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Varwin Client 18
+Comment=Varwin Client for Linux
+Exec=env LD_LIBRARY_PATH=/opt/Varwin18/lib /opt/Varwin18/services/client/UrlSchemaLauncher/UrlSchemaLauncher %U
+Terminal=false
+Type=Application
+MimeType=x-scheme-handler/varwin-client-18;
+Icon=Varwin18
+Categories=Development;3DGraphics;
+NoDisplay=true

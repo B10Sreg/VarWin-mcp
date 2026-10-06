@@ -1,0 +1,19 @@
+pkgbase = varwin-git
+	pkgdesc = Varwin 18 Git Sync & Version Control Tool with AI Model Context Protocol (MCP) server
+	pkgver = 1.0.0.r14.g373e3a4
+	pkgrel = 1
+	url = https://github.com/B10Sreg/VarWin-mcp
+	arch = x86_64
+	license = MIT
+	makedepends = go
+	makedepends = git
+	depends = python
+	depends = git
+	provides = varwin-git
+	provides = varwin-mcp
+	conflicts = varwin-git
+	conflicts = varwin-mcp
+	source = git+https://github.com/B10Sreg/VarWin-mcp.git
+	sha256sums = SKIP
+
+pkgname = varwin-git
