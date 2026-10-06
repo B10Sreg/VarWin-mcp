@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Nvidia driver + Vulkan WSI optimizations and stability fixes
-export __GL_THREADED_OPTIMIZATIONS=0
-export __GL_SYNC_TO_VBLANK=0
-export __GL_VRR_ALLOWED=0
-export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
+# Dynamic GPU / Vulkan driver detection
+if [ -z "$VK_ICD_FILENAMES" ]; then
+    if lspci 2>/dev/null | grep -qi "NVIDIA" && [ -f /usr/share/vulkan/icd.d/nvidia_icd.json ]; then
+        export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
+        export __GL_THREADED_OPTIMIZATIONS=0
+        export __GL_SYNC_TO_VBLANK=0
+        export __GL_VRR_ALLOWED=0
+    elif lspci 2>/dev/null | grep -qiE "AMD|Radeon" && [ -f /usr/share/vulkan/icd.d/radeon_icd.json ]; then
+        export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/radeon_icd.json
+    elif [ -f /usr/share/vulkan/icd.d/intel_icd.json ]; then
+        export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_icd.json
+    fi
+fi
 export LD_LIBRARY_PATH="/opt/Varwin18/lib:${LD_LIBRARY_PATH:-}"
 
 # Auto-detect screen resolution
