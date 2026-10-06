@@ -94,12 +94,27 @@ MCP-сервер настраивается через переменные ок
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
-#### Вариант A: Нативный Go-бинарник (Рекомендуется)
+#### Для Windows (Go Edition - Рекомендуется):
 ```json
 {
   "mcpServers": {
     "varwin": {
-      "command": "/home/reg/Projects/NOVAT.varwin/bin/varwin-mcp",
+      "command": "C:\\path\\to\\VarWin-mcp\\bin\\varwin-mcp.exe",
+      "args": [],
+      "env": {
+        "VARWIN_URL": "http://127.0.0.1:1801"
+      }
+    }
+  }
+}
+```
+
+#### Для Linux / macOS (Go Edition):
+```json
+{
+  "mcpServers": {
+    "varwin": {
+      "command": "/полный/путь/к/VarWin-mcp/bin/varwin-mcp",
       "args": [],
       "env": {
         "VARWIN_URL": "http://127.0.0.1:1801"
@@ -110,13 +125,30 @@ MCP-сервер настраивается через переменные ок
 ```
 
 #### Вариант B: Python-версия
+- **Windows**:
+```json
+{
+  "mcpServers": {
+    "varwin": {
+      "command": "python",
+      "args": [
+        "C:\\path\\to\\VarWin-mcp\\mcp\\server.py"
+      ],
+      "env": {
+        "VARWIN_URL": "http://127.0.0.1:1801"
+      }
+    }
+  }
+}
+```
+- **Linux / macOS**:
 ```json
 {
   "mcpServers": {
     "varwin": {
       "command": "python3",
       "args": [
-        "/home/reg/Projects/NOVAT.varwin/mcp/server.py"
+        "/полный/путь/к/VarWin-mcp/mcp/server.py"
       ],
       "env": {
         "VARWIN_URL": "http://127.0.0.1:1801"

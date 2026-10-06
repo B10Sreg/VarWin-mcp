@@ -23,7 +23,11 @@ from mcp.client import VarwinClient
 from mcp.docs_search import VarwinDocsSearch
 from mcp.validator import VarwinCodeValidator
 
-log_dir = os.path.expanduser("~/.config/VarwinData18/Logs")
+if sys.platform == "win32":
+    appdata = os.environ.get("APPDATA") or os.path.expanduser("~/AppData/Roaming")
+    log_dir = os.path.join(appdata, "VarwinData18", "Logs")
+else:
+    log_dir = os.path.expanduser("~/.config/VarwinData18/Logs")
 os.makedirs(log_dir, exist_ok=True)
 
 logging.basicConfig(
@@ -445,10 +449,18 @@ class VarwinMCPServer:
             url += f"&sceneSid={sid}"
 
         try:
-            subprocess.Popen(["xdg-open", url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if sys.platform == "win32":
+                try:
+                    os.startfile(url)
+                except Exception:
+                    subprocess.Popen(["rundll32", "url.dll,FileProtocolHandler", url], shell=False)
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            else:
+                subprocess.Popen(["xdg-open", url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return f"🚀 Клиент Varwin запущен через URL `{url}`."
         except Exception as e:
-            return f"Ошибка запуска через xdg-open: {e}"
+            return f"Ошибка запуска URL-схемы: {e}"
 
     # JSON-RPC Dispatcher
     def handle_request(self, req: Dict[str, Any]) -> Optional[Dict[str, Any]]:

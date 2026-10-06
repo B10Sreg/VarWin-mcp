@@ -1,12 +1,13 @@
 # VarWin MCP (Model Context Protocol) Server for Varwin 18
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Platform: Windows & Linux](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-0078D6?logo=windows&logoColor=white)](https://github.com/B10Sreg/VarWin-mcp)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go&logoColor=white)](mcp-go/)
 [![Python Version](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](mcp/)
 [![Protocol](https://img.shields.io/badge/MCP-2024--11--05-8A2BE2)](https://modelcontextprotocol.io/)
 [![Varwin XRMS](https://img.shields.io/badge/Varwin-18%20XRMS-FF6B00)](https://varwin.com/)
 
-Высокопроизводительный сервер протокола **Model Context Protocol (MCP)**, позволяющий AI-ассистентам (**Claude Desktop**, **Cursor**, **Antigravity**, **Cline / Roo Code**, **ChatGPT**) напрямую взаимодействовать с платформой **Varwin 18 XRMS** в реальном времени.
+Высокопроизводительный кроссплатформенный сервер протокола **Model Context Protocol (MCP)** для **Windows 10/11** и **Linux**, позволяющий AI-ассистентам (**Claude Desktop**, **Cursor**, **Antigravity**, **Cline / Roo Code**, **ChatGPT**) напрямую взаимодействовать с платформой **Varwin 18 XRMS** в реальном времени.
 
 С помощью VarWin MCP нейросетевые модели получают полный контроль над виртуальными мирами: управление проектами, манипуляция 3D-объектами и сценами, мгновенное редактирование логики Python и визуальных блоков Blockly, инспекция типов, валидация скриптов и запуск 3D-клиента Unity.
 
@@ -15,8 +16,12 @@
 ## ✨ Ключевые возможности
 
 - 🚀 **Две производительные реализации**:
-  - **Go Edition (`mcp-go`)**: сверхбыстрый нативный бинарник без внешних зависимостей с откликом 3–15 мс.
-  - **Python Edition (`mcp`)**: гибкая реализация на стандартной библиотеке Python для быстрой модификации и отладки.
+  - **Go Edition (`mcp-go`)**: сверхбыстрый нативный бинарник без внешних зависимостей (`varwin-mcp` под Linux и `varwin-mcp.exe` под Windows) с откликом 3–15 мс.
+  - **Python Edition (`mcp`)**: гибкая кроссплатформенная реализация на стандартной библиотеке Python для быстрой модификации и отладки.
+- 🪟 **Полная поддержка Windows и Linux**:
+  - Автоматическое определение путей к данным Varwin (`%APPDATA%\VarwinData18` на Windows и `~/.config/VarwinData18` на Linux).
+  - Нативный запуск Unity-клиента через `rundll32` на Windows и `xdg-open` на Linux.
+  - Поддержка запуска интерпретаторов Python (`python.exe` / `python3`).
 - 🛠️ **28 специализированных инструментов (MCP Tools)**:
   - Полный жизненный цикл проектов и сцен (создание, дублирование, удаление, шаблоны).
   - Управление 3D-объектами сцены, расстановка, привязка параметров и инспекция обёрток.
@@ -103,24 +108,31 @@
 ### Вариант 1: Использование готового Go-бинарника (Рекомендуется)
 Репозиторий уже включает предсобранный бинарник `bin/varwin-mcp` (Linux x86_64, ~7 МБ).
 
+#### Linux:
 ```bash
-# Дать права на исполнение (если необходимо)
 chmod +x bin/varwin-mcp
-
-# Проверить handshake по протоколу MCP
 echo '{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}}' | ./bin/varwin-mcp
 ```
 
-Собрать бинарник самостоятельно из исходников:
+#### Windows (PowerShell):
+```powershell
+Get-Content -Raw init.json | .\bin\varwin-mcp.exe
+```
+
+Собрать бинарники для обеих платформ (Linux & Windows):
 ```bash
 ./scripts/build_mcp_go.sh
 ```
 
 ### Вариант 2: Запуск на Python
-Работает на стандартном интерпретаторе Python 3.10+ без установки дополнительных библиотек:
+Работает на стандартном интерпретаторе Python 3.10+ (Windows и Linux):
 
 ```bash
+# Linux / macOS
 python3 -m mcp.server
+
+# Windows
+python -m mcp.server
 ```
 
 ---
@@ -130,8 +142,28 @@ python3 -m mcp.server
 Подробные пошаговые инструкции для всех платформ смотрите в [docs/LAUNCH_GUIDE.md](docs/LAUNCH_GUIDE.md).
 
 ### Claude Desktop
-Отредактируйте конфигурационный файл (`~/.config/Claude/claude_desktop_config.json` на Linux или `%APPDATA%\Claude\claude_desktop_config.json` на Windows):
 
+**Путь к конфигурационному файлу**:
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+#### Конфигурация для Windows:
+```json
+{
+  "mcpServers": {
+    "varwin": {
+      "command": "C:\\path\\to\\VarWin-mcp\\bin\\varwin-mcp.exe",
+      "args": [],
+      "env": {
+        "VARWIN_URL": "http://127.0.0.1:1801"
+      }
+    }
+  }
+}
+```
+
+#### Конфигурация для Linux:
 ```json
 {
   "mcpServers": {

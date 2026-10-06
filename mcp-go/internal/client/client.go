@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -1059,11 +1060,57 @@ func (c *VarwinClient) GetSystemModule(locale string) (string, error) {
 	return mod, nil
 }
 
-func (c *VarwinClient) AddSceneObject(sceneID int, objectID int, name string, varName string, x, y, z float64, rx, ry, rz float64, sx, sy, sz float64) (int, error) {
+func findVarwinDBPath() (string, error) {
 	homeDir, _ := os.UserHomeDir()
-	dbPath := filepath.Join(homeDir, ".config", "VarwinData18", "SQLite3", "database.db")
-	if _, err := os.Stat(dbPath); err != nil {
-		return 0, fmt.Errorf("Varwin database not found at %s", dbPath)
+	candidates := []string{
+		filepath.Join(homeDir, ".config", "VarwinData18", "SQLite3", "database.db"),
+	}
+	if appData := os.Getenv("APPDATA"); appData != "" {
+		candidates = append([]string{filepath.Join(appData, "VarwinData18", "SQLite3", "database.db")}, candidates...)
+	}
+	if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
+		candidates = append(candidates, filepath.Join(localAppData, "VarwinData18", "SQLite3", "database.db"))
+	}
+	if programData := os.Getenv("ProgramData"); programData != "" {
+		candidates = append(candidates, filepath.Join(programData, "VarwinData18", "SQLite3", "database.db"))
+	}
+	candidates = append(candidates,
+		filepath.Join(homeDir, "AppData", "Roaming", "VarwinData18", "SQLite3", "database.db"),
+	)
+	for _, p := range candidates {
+		if _, err := os.Stat(p); err == nil {
+			return p, nil
+		}
+	}
+	return candidates[0], fmt.Errorf("Varwin database not found at %s", candidates[0])
+}
+
+func getPythonExecutable() string {
+	if runtime.GOOS == "windows" {
+		if p, err := exec.LookPath("python"); err == nil {
+			return p
+		}
+		if p, err := exec.LookPath("python3"); err == nil {
+			return p
+		}
+		if p, err := exec.LookPath("py"); err == nil {
+			return p
+		}
+		return "python"
+	}
+	if p, err := exec.LookPath("python3"); err == nil {
+		return p
+	}
+	if p, err := exec.LookPath("python"); err == nil {
+		return p
+	}
+	return "python3"
+}
+
+func (c *VarwinClient) AddSceneObject(sceneID int, objectID int, name string, varName string, x, y, z float64, rx, ry, rz float64, sx, sy, sz float64) (int, error) {
+	dbPath, err := findVarwinDBPath()
+	if err != nil {
+		return 0, err
 	}
 
 	if sx == 0 && sy == 0 && sz == 0 {
@@ -1124,7 +1171,7 @@ con.commit()
 print(cur.lastrowid)
 `
 
-	cmd := exec.Command("python3", "-c", script,
+	cmd := exec.Command(getPythonExecutable(), "-c", script,
 		dbPath,
 		strconv.Itoa(sceneID),
 		strconv.Itoa(objectID),

@@ -46,8 +46,14 @@ func (v *VarwinCodeValidator) Validate(codeStr string, filename string) Validati
 	var errors []string
 	var warnings []string
 
-	// 1. Python AST syntax check if python3 exists
-	if pyPath, err := exec.LookPath("python3"); err == nil {
+	// 1. Python AST syntax check if python3/python exists
+	pyCmd := "python3"
+	if _, err := exec.LookPath(pyCmd); err != nil {
+		if _, err := exec.LookPath("python"); err == nil {
+			pyCmd = "python"
+		}
+	}
+	if pyPath, err := exec.LookPath(pyCmd); err == nil {
 		checkScript := `
 import ast, sys
 try:

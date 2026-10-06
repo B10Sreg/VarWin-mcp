@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -1224,6 +1225,17 @@ func (s *Server) toolGetWrapperDoc(args map[string]interface{}) (string, error) 
 	return doc, nil
 }
 
+func launchURL(url string) error {
+	switch runtime.GOOS {
+	case "windows":
+		return exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		return exec.Command("open", url).Start()
+	default:
+		return exec.Command("xdg-open", url).Start()
+	}
+}
+
 func (s *Server) toolLaunchClient(args map[string]interface{}) (string, error) {
 	sid, _ := args["scene_sid"].(string)
 	mode, _ := args["mode"].(string)
@@ -1236,8 +1248,7 @@ func (s *Server) toolLaunchClient(args map[string]interface{}) (string, error) {
 		url += "&sceneSid=" + sid
 	}
 
-	cmd := exec.Command("xdg-open", url)
-	if err := cmd.Start(); err != nil {
+	if err := launchURL(url); err != nil {
 		return fmt.Sprintf("Ошибка запуска клиента: %v", err), nil
 	}
 	return fmt.Sprintf("🚀 Клиент Varwin запущен через URL `%s`.", url), nil
