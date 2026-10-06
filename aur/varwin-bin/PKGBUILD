@@ -1,7 +1,7 @@
 # Maintainer: B10Sreg <iam171181@gmail.com>
 pkgname=varwin-bin
 pkgver=18.5.512
-pkgrel=2
+pkgrel=3
 pkgdesc="Varwin XRMS - 3D/VR Platform and Creation Suite for Linux"
 arch=('x86_64')
 url="https://varwin.com"

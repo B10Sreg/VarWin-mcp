@@ -1,7 +1,7 @@
 pkgbase = varwin-bin
 	pkgdesc = Varwin XRMS - 3D/VR Platform and Creation Suite for Linux
 	pkgver = 18.5.512
-	pkgrel = 2
+	pkgrel = 3
 	url = https://varwin.com
 	install = varwin.install
 	arch = x86_64
