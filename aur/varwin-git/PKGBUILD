@@ -1,6 +1,6 @@
 # Maintainer: B10Sreg <iam171181@gmail.com>
 pkgname=varwin-git
-pkgver=1.0.0.r14.g373e3a4
+pkgver=12febc9
 pkgrel=1
 pkgdesc="Varwin 18 Git Sync & Version Control Tool with AI Model Context Protocol (MCP) server"
 arch=('x86_64')
