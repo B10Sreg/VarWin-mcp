@@ -294,9 +294,12 @@ class VarwinClient:
         mutation = """
         mutation CreateProj($input: CreateProjectInput!) {
             createProject(input: $input) {
-                id
-                name
-                guid
+                projectId
+                project {
+                    id
+                    name
+                    guid
+                }
             }
         }
         """
@@ -308,9 +311,147 @@ class VarwinClient:
                 "multiplayer": multiplayer,
                 "autoUpdateLibraryItemVersions": True,
                 "author": {
-                    "name": self.user_info.get("fullName", "Varwin MCP") if self.user_info else "Varwin MCP"
+                    "name": self.user_info.get("fullName", "Varwin MCP") if self.user_info else "Varwin MCP",
+                    "company": "Varwin Community",
+                    "email": "developer@varwin.local",
+                    "url": "https://varwin.com",
                 },
                 "contentLicenseId": "1",
             }
         }
         return self.execute_raw(mutation, variables=variables, auth=True)
+
+    def delete_project(self, project_id: int) -> Dict[str, Any]:
+        """Delete a project by numeric ID."""
+        mutation = """
+        mutation DelProj($input: DeleteProjectInput!) {
+            deleteProject(input: $input) {
+                projectId
+            }
+        }
+        """
+        return self.execute_raw(mutation, variables={"input": {"id": int(project_id)}}, auth=True)
+
+    def rename_project(self, project_id: int, new_name: str, workspace_id: Optional[int] = None) -> Dict[str, Any]:
+        """Rename a project."""
+        ws_id = workspace_id or self.workspace_id
+        mutation = """
+        mutation RenameProj($input: RenameProjectInput!) {
+            renameProject(input: $input) {
+                projectId
+                project {
+                    id
+                    name
+                    guid
+                }
+            }
+        }
+        """
+        variables = {
+            "input": {
+                "workspaceId": str(ws_id),
+                "id": int(project_id),
+                "name": new_name,
+            }
+        }
+        return self.execute_raw(mutation, variables=variables, auth=True)
+
+    def create_scene(self, project_id: int, name: str, scene_template_id: int = 1, lang: str = "ru") -> Dict[str, Any]:
+        """Create a new scene in a project."""
+        mutation = """
+        mutation CreateSc($input: CreateSceneInput!) {
+            createScene(input: $input) {
+                sceneId
+                scene {
+                    id
+                    name
+                    sid
+                }
+            }
+        }
+        """
+        variables = {
+            "input": {
+                "projectId": int(project_id),
+                "name": name,
+                "sceneTemplateId": int(scene_template_id),
+                "lang": lang,
+            }
+        }
+        return self.execute_raw(mutation, variables=variables, auth=True)
+
+    def delete_scene(self, scene_id: int) -> Dict[str, Any]:
+        """Delete a scene by numeric ID."""
+        mutation = """
+        mutation DelSc($input: DeleteSceneInput!) {
+            deleteScene(input: $input) {
+                sceneId
+            }
+        }
+        """
+        return self.execute_raw(mutation, variables={"input": {"id": int(scene_id)}}, auth=True)
+
+    def rename_scene(self, scene_id: int, new_name: str) -> Dict[str, Any]:
+        """Rename a scene."""
+        mutation = """
+        mutation RenameSc($input: RenameSceneInput!) {
+            renameScene(input: $input) {
+                sceneId
+                scene {
+                    id
+                    name
+                    sid
+                }
+            }
+        }
+        """
+        variables = {
+            "input": {
+                "id": int(scene_id),
+                "name": new_name,
+            }
+        }
+        return self.execute_raw(mutation, variables=variables, auth=True)
+
+    def update_scene_objects(self, scene_id: int, data: Any, scene_objects: Optional[List[Any]] = None, object_behaviours: Optional[List[Any]] = None) -> Dict[str, Any]:
+        """Update scene objects and transforms via GraphQL mutation."""
+        mutation = """
+        mutation UpdateObjects($input: UpdateSceneObjectsInput!) {
+            updateSceneObjects(input: $input) {
+                sceneId
+                scene {
+                    id
+                    name
+                }
+            }
+        }
+        """
+        variables = {
+            "input": {
+                "id": int(scene_id),
+                "data": data,
+                "sceneObjects": scene_objects or [],
+                "objectBehaviours": object_behaviours or [],
+            }
+        }
+        return self.execute_raw(mutation, variables=variables, auth=True)
+
+    def update_blockly(self, scene_id: int, blockly_data: Any, blockly_code_module: str, used_object_ids: Optional[List[int]] = None) -> Dict[str, Any]:
+        """Update Blockly blocks and generated Python code for a scene."""
+        mutation = """
+        mutation UpdateBlk($input: UpdateBlocklyInput!) {
+            updateBlockly(input: $input) {
+                sceneId
+            }
+        }
+        """
+        variables = {
+            "input": {
+                "id": int(scene_id),
+                "blocklyData": blockly_data,
+                "blocklyCodeModule": blockly_code_module,
+                "sceneObjectInstanceIdsUsedInLogic": used_object_ids or [],
+            }
+        }
+        return self.execute_raw(mutation, variables=variables, auth=True)
+

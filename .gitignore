@@ -49,5 +49,11 @@ Thumbs.db
 dumps/
 tmp/
 
-# Keep precompiled Go binary
+# Keep precompiled binaries & tools
 !bin/varwin-mcp
+!bin/varwin-mcp.exe
+!bin/varwin-git
+!bin/varwin-git.cmd
+
+# Large media assets
+panoramas/

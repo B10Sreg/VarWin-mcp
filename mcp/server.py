@@ -241,6 +241,41 @@ class VarwinMCPServer:
                 },
                 "handler": self._tool_launch_client,
             },
+            "varwin_git_export": {
+                "description": "Экспортировать проект Varwin в легкую (~60 КБ), версионируемую структуру Git/GitHub (project.json, scene.json, objects.json, Main.py, Blockly.xml).",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "project": {
+                            "type": "string",
+                            "description": "ID, GUID или название проекта для экспорта",
+                        },
+                        "dir": {
+                            "type": "string",
+                            "description": "Опциональный путь к папке репозитория",
+                        }
+                    },
+                    "required": ["project"]
+                },
+                "handler": self._tool_git_export,
+            },
+            "varwin_git_apply": {
+                "description": "Импортировать или обновить проект в локальном Varwin из репозитория Git/GitHub.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "dir": {
+                            "type": "string",
+                            "description": "Путь к папке Git-репозитория (по умолчанию '.')",
+                        },
+                        "name": {
+                            "type": "string",
+                            "description": "Опциональное новое имя проекта при импорте",
+                        }
+                    }
+                },
+                "handler": self._tool_git_apply,
+            },
         }
 
     # Tool Handlers
@@ -461,6 +496,28 @@ class VarwinMCPServer:
             return f"🚀 Клиент Varwin запущен через URL `{url}`."
         except Exception as e:
             return f"Ошибка запуска URL-схемы: {e}"
+
+    def _tool_git_export(self, args: Dict[str, Any]) -> str:
+        proj = args.get("project")
+        target_dir = args.get("dir")
+        try:
+            from scripts.varwin_git import VarwinGitManager
+            mgr = VarwinGitManager()
+            out = mgr.export_project(str(proj), target_dir=target_dir)
+            return f"✅ Проект '{proj}' успешно экспортирован в Git-репозиторий: `{out}`"
+        except Exception as e:
+            return f"❌ Ошибка экспорта в Git: {e}"
+
+    def _tool_git_apply(self, args: Dict[str, Any]) -> str:
+        repo_dir = args.get("dir", ".")
+        name_override = args.get("name")
+        try:
+            from scripts.varwin_git import VarwinGitManager
+            mgr = VarwinGitManager()
+            p_id = mgr.apply_project(repo_dir=repo_dir, target_project_name=name_override)
+            return f"🎉 Проект из Git-репозитория `{repo_dir}` успешно применен в Varwin (Project ID: {p_id})!"
+        except Exception as e:
+            return f"❌ Ошибка применения Git проекта: {e}"
 
     # JSON-RPC Dispatcher
     def handle_request(self, req: Dict[str, Any]) -> Optional[Dict[str, Any]]:
